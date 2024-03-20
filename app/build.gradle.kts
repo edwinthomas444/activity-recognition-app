@@ -53,7 +53,8 @@ android {
 
 dependencies {
     // adding dependency for google play services
-    implementation("com.google.android.gms:play-services-location:21.2.0")
+//    implementation("com.google.android.gms:play-services-location:21.2.0")
+    implementation("com.google.android.gms:play-services-location:19.0.1")
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
