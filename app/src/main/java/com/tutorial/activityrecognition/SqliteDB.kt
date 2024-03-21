@@ -11,11 +11,12 @@ class SqliteDB(context: Context, factory: SQLiteDatabase.CursorFactory?) :
 
     // below is the method for creating a database by a sqlite query
     override fun onCreate(db: SQLiteDatabase) {
+        // db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME)
         val query = ("CREATE TABLE " + TABLE_NAME + " ("
                 + ID_COL + " INTEGER PRIMARY KEY, " +
-                DAY + " TEXT," +
-                TIME + " TEXT" +
-                DURATION + " INTEGER" +
+                DAY + " TEXT, " +
+                TIME + " TEXT, " +
+                DURATION + " INTEGER, " +
                 ACTIVITY + " TEXT" +
                 ")")
 

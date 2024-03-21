@@ -1,9 +1,14 @@
 package com.tutorial.activityrecognition
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -63,6 +68,34 @@ class MainActivity : ComponentActivity() {
     var recognizedActivity by mutableStateOf(0)
     var previousState by mutableStateOf(0)
     var startTime by mutableStateOf(System.currentTimeMillis())
+
+    // define the audio player
+    // client that binds to the service
+    private lateinit var aService: AudioService
+    // variable to store if the service is bound
+    private var aBound : Boolean = false
+
+    // anonymous class definition and assignment to an instance of that class
+    // the anonymous class overrides Service Connection
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, serviceBinder: IBinder?) {
+            // binder is passed to serviceBinder by calling onBind() of Service
+            // 'as' casts it
+            val binder = serviceBinder as AudioService.AudioBinder
+            // instance of the Service class itself
+            // as getService returns this@AudioService
+            aService = binder.getService()
+            aBound = true
+            Log.d(TAG, "Service connected")
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            // this is called when android system loses connection to the service
+            // not invoked when unbind() is called from the client side
+            aBound = false
+            Log.d(TAG, "Service disconnected")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -147,10 +180,25 @@ class MainActivity : ComponentActivity() {
                             // store activity updates in the database
                             db.addEntry(date, time, minutes.toInt(), ActivityCodesToString[previousState] ?: "Null Activity")
 
+                            // play music
+                            // if the new activity is run start playing music
+                            if (ActivityCodesToString[recognizedActivity] == "Run"){
+                                if (aBound){
+                                    aService?.startPlayback()
+                                }
+                            }else{
+                                if (aBound){
+                                    aService?.pausePlayback()
+                                }
+                            }
+
                             // update start time
                             startTime = endTime
                             // update previous state
                             previousState = recognizedActivity
+
+
+
                         }
                         Log.d(ContentValues.TAG, "Observation Win: ${observationWin}")
                         Log.d(ContentValues.TAG, "Stable Entry: ${recognizedActivity}")
@@ -256,6 +304,47 @@ class MainActivity : ComponentActivity() {
     }
     fun showActivityUpdateToast(message: String){
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    override fun onStart(){
+        super.onStart()
+        // Intent takes the current context (which is this application) and
+        // the class object of service
+        // .also applies processing over the intent object as a pipeline after it
+        // the code creates an intent object and uses it to bind to a service with
+        // a service connection. Note: bind_auto_create creates the service if its not already created
+        Intent(this, AudioService::class.java).also {
+                intent -> bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
+        Log.d(TAG, "onStart() of service")
+    }
+    // on app exit
+    // we could also implement unbind with the connection in the onDestroy()
+    // but onStop() comes before onDestroy() and terminates the bind
+    override fun onStop() {
+        super.onStop()
+        // stop service
+        unbindService(connection)
+        aBound = false
+    }
+
+    override fun onPause(){
+        super.onPause()
+        if (aBound && ActivityCodesToString[recognizedActivity] == "Run"){
+            aService?.pausePlayback()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (aBound && ActivityCodesToString[recognizedActivity] == "Run"){
+            aService?.startPlayback()
+        }
+    }
+
+    // Tag for debugging purposes
+    companion object {
+        private const val TAG = "MainActivity"
     }
 }
 

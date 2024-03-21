@@ -17,6 +17,8 @@
         android:theme="@style/Theme.ActivityRecognition"
         tools:targetApi="31">
 
+        <service
+            android:name=".AudioService"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
