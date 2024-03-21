@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -24,16 +25,26 @@ import com.tutorial.activityrecognition.ui.theme.ActivityRecognitionTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 class MainActivity : ComponentActivity() {
 
@@ -47,7 +58,8 @@ class MainActivity : ComponentActivity() {
     private var observationWin = mutableListOf<Int>()
     val maxObservations = 20
     var recognizedActivity by mutableStateOf(0)
-
+    var previousState by mutableStateOf(0)
+    var startTime by mutableStateOf(System.currentTimeMillis())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,6 +121,21 @@ class MainActivity : ComponentActivity() {
                             .maxByOrNull { it.value }
 
                         recognizedActivity = maxOccurrencesEntry?.key ?: 0
+
+                        if (recognizedActivity != previousState){
+                            // logic for getting end time and display a toast
+                            val endTime = System.currentTimeMillis()
+                            val seconds = (endTime - startTime) / 1000
+                            val minutes = seconds / 60
+                            val extraSeconds = seconds % 60
+                            val message = "${toastMessagesfromPrevious[previousState]} $minutes min $extraSeconds sec"
+                            showActivityUpdateToast(message)
+
+                            // update start time
+                            startTime = endTime
+                            // update previous state
+                            previousState = recognizedActivity
+                        }
                         Log.d(ContentValues.TAG, "Observation Win: ${observationWin}")
                         Log.d(ContentValues.TAG, "Stable Entry: ${recognizedActivity}")
                     }
@@ -170,19 +197,49 @@ class MainActivity : ComponentActivity() {
                                     painter = painterResource(id = ActivityCodesToImage[displayActivity]!!),
                                     contentDescription = "Screen App Background",
                                     contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.size(250.dp)
+                                    modifier = Modifier.size(300.dp, 350.dp)
                                         .clip(RoundedCornerShape(16.dp))
                                 )
                             }
                             // Activity Message
-                            ElevatedCard {
-                                Text(text = "Recognized Activity: ${ActivityCodesToString[displayActivity]}")
+                            ElevatedCard(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .width(300.dp)
+                                    .height(150.dp)
+                                    .background(color = Color.White)
+                            ) {
+                                Column(modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center){
+
+                                    // first text with the recognized activity
+                                    Text(text = "Recognized Activity: ${ActivityCodesToString[displayActivity]}\n ${ActivityCodesToDescription[displayActivity]}",
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 18.sp,
+                                            color = Color.Black),
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                    // second text with the quote
+                                    Text(text = "\"${activityQuotes[displayActivity]}\"",
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 18.sp,
+                                            color = Color.Black),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+    fun showActivityUpdateToast(message: String){
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 }
 
