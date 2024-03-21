@@ -45,6 +45,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -70,6 +73,9 @@ class MainActivity : ComponentActivity() {
             fastestInterval = 1000 // 1 second
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
+
+        // innitialize the db
+        val db = SqliteDB(this, null)
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
@@ -130,6 +136,16 @@ class MainActivity : ComponentActivity() {
                             val extraSeconds = seconds % 60
                             val message = "${toastMessagesfromPrevious[previousState]} $minutes min $extraSeconds sec"
                             showActivityUpdateToast(message)
+
+                            // process current date and time
+                            val calendar = Calendar.getInstance()
+                            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            val date = dateFormat.format(calendar.time)
+                            val time = timeFormat.format(calendar.time)
+
+                            // store activity updates in the database
+                            db.addEntry(date, time, minutes.toInt(), ActivityCodesToString[previousState] ?: "Null Activity")
 
                             // update start time
                             startTime = endTime
