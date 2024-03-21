@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
                         var diff_lat = Math.abs(locationMem[0].first - locationMem[1].first)
                         var diff_long = Math.abs(locationMem[0].second - locationMem[1].second)
 
-                        if (diff_lat<= 1e-6 && diff_long <= 1e-6){
+                        if (diff_lat<= 9e-6 && diff_long <= 9e-6){
                             // very less difference between position track of user
                             // indicates stationary
                             Log.e(ContentValues.TAG, "User is stationary")
