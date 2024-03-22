@@ -33,19 +33,25 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,6 +59,9 @@ import androidx.compose.ui.unit.sp
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.compose.material3.CardColors
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
 
@@ -180,24 +189,10 @@ class MainActivity : ComponentActivity() {
                             // store activity updates in the database
                             db.addEntry(date, time, minutes.toInt(), ActivityCodesToString[previousState] ?: "Null Activity")
 
-                            // play music
-                            // if the new activity is run start playing music
-                            if (ActivityCodesToString[recognizedActivity] == "Run"){
-                                if (aBound){
-                                    aService?.startPlayback()
-                                }
-                            }else{
-                                if (aBound){
-                                    aService?.pausePlayback()
-                                }
-                            }
-
                             // update start time
                             startTime = endTime
                             // update previous state
                             previousState = recognizedActivity
-
-
 
                         }
                         Log.d(ContentValues.TAG, "Observation Win: ${observationWin}")
@@ -240,62 +235,75 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+
+                    // create a variable for the home screen
+                    var homeScreenDisable by remember { mutableStateOf(false) }
                     // A surface container using the 'background' color from the theme
                     var displayActivity by remember { mutableStateOf(this.recognizedActivity) }
                     displayActivity = recognizedActivity
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Image(
-                            painter = painterResource(id = ActivityCodesToBackground[displayActivity]!!),
-                            contentDescription = "Screen App Background",
-                            contentScale = ContentScale.FillBounds,
-                            modifier = Modifier.matchParentSize()
-                        )
-                        Column(modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center){
-                            // Recognized Activity Logo
-                            ElevatedCard {
-                                Image(
-                                    painter = painterResource(id = ActivityCodesToImage[displayActivity]!!),
-                                    contentDescription = "Screen App Background",
-                                    contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.size(300.dp, 350.dp)
-                                        .clip(RoundedCornerShape(16.dp))
-                                )
-                            }
-                            // Activity Message
-                            ElevatedCard(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .width(300.dp)
-                                    .height(150.dp)
-                                    .background(color = Color.White)
-                            ) {
-                                Column(modifier = Modifier.fillMaxSize(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center){
 
-                                    // first text with the recognized activity
-                                    Text(text = "Recognized Activity: ${ActivityCodesToString[displayActivity]}\n ${ActivityCodesToDescription[displayActivity]}",
-                                        style = TextStyle(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 18.sp,
-                                            color = Color.Black),
-                                        textAlign = TextAlign.Center
-                                    )
 
-                                    // second text with the quote
-                                    Text(text = "\"${activityQuotes[displayActivity]}\"",
-                                        style = TextStyle(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 18.sp,
-                                            color = Color.Black),
-                                        textAlign = TextAlign.Center
+                    if (homeScreenDisable){
+                        Box(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Image(
+                                painter = painterResource(id = ActivityCodesToBackground[displayActivity]!!),
+                                contentDescription = "Screen App Background",
+                                contentScale = ContentScale.FillBounds,
+                                modifier = Modifier.matchParentSize()
+                            )
+                            Column(modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center){
+                                // Recognized Activity Logo
+                                ElevatedCard {
+                                    Image(
+                                        painter = painterResource(id = ActivityCodesToImage[displayActivity]!!),
+                                        contentDescription = "Screen App Background",
+                                        contentScale = ContentScale.FillBounds,
+                                        modifier = Modifier
+                                            .size(300.dp, 350.dp)
+                                            .clip(RoundedCornerShape(16.dp))
                                     )
                                 }
+                                // Activity Message
+                                ElevatedCard(
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .width(300.dp)
+                                        .height(200.dp)
+                                ) {
+                                    Column(modifier = Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center){
+
+                                        // first text with the recognized activity
+                                        Text(text = "Recognized Activity: ${ActivityCodesToString[displayActivity]}\n ${ActivityCodesToDescription[displayActivity]}",
+                                            style = TextStyle(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 24.sp,
+                                                color = Color.Black),
+                                            textAlign = TextAlign.Center
+                                        )
+
+                                        Spacer(modifier = Modifier.height(16.dp))
+
+                                        // second text with the quote
+                                        Text(text = "\"${activityQuotes[displayActivity]}\"",
+                                            style = TextStyle(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 18.sp,
+                                                color = Color.Black),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
                             }
+                        }
+                    }else{
+                        HomeScreen{
+                            homeScreenDisable = true
                         }
                     }
                 }
@@ -330,14 +338,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause(){
         super.onPause()
-        if (aBound && ActivityCodesToString[recognizedActivity] == "Run"){
+        if (aBound){
             aService?.pausePlayback()
         }
     }
 
     override fun onResume() {
         super.onResume()
-        if (aBound && ActivityCodesToString[recognizedActivity] == "Run"){
+        if (aBound){
             aService?.startPlayback()
         }
     }
@@ -348,4 +356,108 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun HomeScreen(refPass: ()->Unit){
+    var dateTime by remember { mutableStateOf(getHomePageTime()) }
 
+    // we need to update dateTime every second by calling it
+    LaunchedEffect(Unit) {
+        while (true) {
+            dateTime = getHomePageTime()
+            delay(1000) // Update every second
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center){
+        Image(
+            painter = painterResource(id = R.drawable.home),
+            contentDescription = "Screen App Home page background",
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier.matchParentSize()
+        )
+
+
+        ElevatedCard(modifier = Modifier.size(325.dp, 550.dp),
+        ){
+            Column(modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally) {
+
+
+                Text(
+                    text = "${dateTime.first}",
+                    modifier = Modifier.width(250.dp),
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2E7D32),
+                        fontSize = 35.sp,
+                        fontFamily = FontFamily.SansSerif
+                    ),
+                    textAlign = TextAlign.Center)
+
+                Text(
+                    text = "${dateTime.second}",
+                    modifier = Modifier.width(250.dp),
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFF9100),
+                        fontSize = 35.sp,
+                        fontFamily = FontFamily.SansSerif
+                    ),
+                    textAlign = TextAlign.Center)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Welcome to TrackTivity",
+                    modifier = Modifier.width(250.dp),
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2E7D32),
+                        fontSize = 45.sp,
+                        fontFamily = FontFamily.SansSerif
+                    ),
+                    textAlign = TextAlign.Center)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Your personal activity recognition assistant !",
+                    modifier = Modifier.width(200.dp),
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        fontSize = 24.sp,
+                        fontFamily = FontFamily.SansSerif
+                    ),
+                    textAlign = TextAlign.Center)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                ElevatedButton(
+                    onClick = {
+                    // disable the home screen
+                    refPass()
+                }){
+                    Text(text = "OK",
+                        style = TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFF9100),
+                            fontSize = 24.sp,
+                            fontFamily = FontFamily.SansSerif
+                        ))
+                }
+            }
+        }
+    }
+}
+
+fun getHomePageTime(): Pair<String, String> {
+    val calendar = Calendar.getInstance()
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+    val currentDate = dateFormat.format(calendar.time)
+    val currentTime = timeFormat.format(calendar.time)
+    return Pair(currentDate, currentTime)
+}

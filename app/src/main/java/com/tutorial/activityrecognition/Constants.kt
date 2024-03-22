@@ -19,7 +19,7 @@ val StringToActivityCodes = mapOf(
 )
 
 val ActivityCodesToDescription = mapOf(
-    0 to "The device is still (not moving).",
+    0 to "The device is not moving.",
     1 to "The device is on a user who is walking.",
     2 to "The device is on a user who is running.",
     3 to "The device is in a vehicle, such as a car."

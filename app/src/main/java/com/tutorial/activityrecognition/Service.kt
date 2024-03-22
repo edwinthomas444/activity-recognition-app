@@ -24,6 +24,9 @@ class AudioService: Service(){
     override fun onCreate() {
         super.onCreate()
         mediaPlayer = MediaPlayer.create(this, R.raw.run_audio)
+        mediaPlayer.isLooping = true
+
+        mediaPlayer?.start()
     }
 
     // unbind calls onDestroy if all connections to service are disconnected
